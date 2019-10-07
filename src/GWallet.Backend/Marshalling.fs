@@ -80,7 +80,7 @@ module Marshalling =
     let internal PascalCase2LowercasePlusUnderscoreConversionSettings =
         JsonSerializerSettings(ContractResolver = PascalCase2LowercasePlusUnderscoreContractResolver())
 
-    let internal DefaultSettings =
+    let internal DefaultSettings () = // Function so that we won't mutate. This is hard to clone.
         JsonSerializerSettings(MissingMemberHandling = MissingMemberHandling.Error,
                                ContractResolver = RequireAllPropertiesContractResolver(),
                                DateTimeZoneHandling = DateTimeZoneHandling.Utc)
@@ -128,7 +128,7 @@ module Marshalling =
         deserialized.Value
 
     let Deserialize<'T>(json: string): 'T =
-        DeserializeCustom(json, DefaultSettings)
+        DeserializeCustom(json, DefaultSettings ())
 
     let private SerializeInternal<'T>(value: 'T) (settings: JsonSerializerSettings): string =
         JsonConvert.SerializeObject(MarshallingWrapper<'T>.New value,
@@ -144,7 +144,7 @@ module Marshalling =
                                                   (typeof<'T>.FullName) value, exn))
 
     let Serialize<'T>(value: 'T): string =
-        SerializeCustom(value, DefaultSettings)
+        SerializeCustom(value, DefaultSettings ())
 
     type CompressionOrDecompressionException(msg: string, innerException: Exception) =
         inherit Exception(msg, innerException)

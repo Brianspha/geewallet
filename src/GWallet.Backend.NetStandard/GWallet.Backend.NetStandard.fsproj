@@ -120,6 +120,12 @@
     <Compile Include="..\GWallet.Backend\ServerManager.fs">
       <Link>ServerManager.fs</Link>
     </Compile>
+    <Compile Include="UtxoCoin\Lightning\JsonMarshalling.fs">
+      <Link>UtxoCoin\Lightning\JsonMarshalling.fs</Link>
+    </Compile>
+    <Compile Include="UtxoCoin\Lightning\Lightning.fs">
+      <Link>UtxoCoin\Lightning\Lightning.fs</Link>
+    </Compile>
     <EmbeddedResource Include="..\GWallet.Backend\servers.json">
       <Link>servers.json</Link>
     </EmbeddedResource>
