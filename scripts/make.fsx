@@ -13,25 +13,11 @@ open FSX.Infrastructure
 open Process
 
 let UNIX_NAME = "geewallet"
-let CONSOLE_FRONTEND = "GWallet.Frontend.Console"
-let GTK_FRONTEND = "GWallet.Frontend.XF.Gtk"
-let DEFAULT_SOLUTION_FILE = "gwallet.core.sln"
+let DEFAULT_SOLUTION_FILE = "gwallet.backend.sln"
 let LINUX_SOLUTION_FILE = "gwallet.linux.sln"
-let BACKEND = "GWallet.Backend"
+let NETSTANDARD_SOLUTION_FILE = "gwallet.netstandard.sln"
 
-type Frontend =
-    | Console
-    | Gtk
-    member self.GetProjectName() =
-        match self with
-        | Console -> CONSOLE_FRONTEND
-        | Gtk -> GTK_FRONTEND
-    member self.GetExecutableName() =
-        match self with
-        | Console -> CONSOLE_FRONTEND
-        | Gtk -> UNIX_NAME
-    override self.ToString() =
-        sprintf "%A" self
+let buildConfigFileName = "build.config"
 
 type BinaryConfig =
     | Debug
@@ -50,7 +36,6 @@ let rec private GatherTarget (args: string list, targetSet: Option<string>): Opt
 let scriptsDir = __SOURCE_DIRECTORY__ |> DirectoryInfo
 let rootDir = Path.Combine(scriptsDir.FullName, "..") |> DirectoryInfo
 
-let buildConfigFileName = "build.config"
 let buildConfigContents =
     let buildConfig = FileInfo (Path.Combine (scriptsDir.FullName, buildConfigFileName))
     if not (buildConfig.Exists) then
@@ -107,6 +92,35 @@ exec mono "$FRONTEND_PATH" "$@"
 let nugetExe = Path.Combine(rootDir.FullName, ".nuget", "nuget.exe") |> FileInfo
 let nugetPackagesSubDirName = "packages"
 
+type IProject =
+    abstract ProjectName: string with get
+
+let GetProjectName (project: IProject): string =
+    project.ProjectName
+
+let GetProjectPath (project: IProject): string =
+    Path.Combine (rootDir.FullName, "src", project.ProjectName)
+
+type BackendProject =
+    | Backend
+    | BackendTests
+    interface IProject with
+        member self.ProjectName: string =
+            match self with
+            | Backend -> "GWallet.Backend"
+            | BackendTests -> "GWallet.Backend.Tests"
+
+type Frontend =
+    | Console
+    | Gtk
+    interface IProject with
+        member self.ProjectName =
+            match self with
+            | Console -> "GWallet.Frontend.Console"
+            | Gtk -> "GWallet.Frontend.XF.Gtk"
+    override self.ToString() =
+        sprintf "%A" self
+
 let PrintNugetVersion () =
     if not (nugetExe.Exists) then
         false
@@ -119,6 +133,21 @@ let PrintNugetVersion () =
             Console.Error.WriteLine nugetProc.Output.StdErr
             Console.WriteLine()
             failwith "nuget process' output contained errors ^"
+
+
+let oldVersionOfMono =
+    let monoVersion = Map.tryFind "MonoPkgConfigVersion" buildConfigContents
+    match monoVersion with
+    | None ->
+        false
+    | Some version ->
+        let versionOfMonoWhereRunningExesDirectlyIsSupported = Version("5.16")
+        let versionOfMonoWhereArrayEmptyIsPresent = Version("5.8.1.0")
+        let maxVersion =
+            [versionOfMonoWhereRunningExesDirectlyIsSupported;
+             versionOfMonoWhereArrayEmptyIsPresent].Max()
+        let currentMonoVersion = Version(version)
+        1 = maxVersion.CompareTo currentMonoVersion
 
 let BuildSolution buildTool solutionFileName binaryConfig extraOptions =
     let configOption = sprintf "/p:Configuration=%s" (binaryConfig.ToString())
@@ -136,48 +165,94 @@ let BuildSolution buildTool solutionFileName binaryConfig extraOptions =
         PrintNugetVersion() |> ignore
         Environment.Exit 1
 
-let JustBuild binaryConfig: Frontend*FileInfo =
+let NugetRestoreString (path: string) =
+    printfn "Restoring %s" path
+    let packagesPath: string = Path.Combine (rootDir.FullName, nugetPackagesSubDirName)
+    let nugetWorkaroundArgs =
+        sprintf " restore %s -PackagesDirectory %s" path packagesPath
+    let nugetCmd =
+        match Misc.GuessPlatform() with
+        | Misc.Platform.Windows ->
+            { Command = nugetExe.FullName; Arguments = nugetWorkaroundArgs }
+        | _ -> { Command = "mono"; Arguments = nugetExe.FullName + nugetWorkaroundArgs }
+    Process.SafeExecute(nugetCmd, Echo.All) |> ignore
+    printfn "Restored %s" path
+
+let NugetRestore (project: IProject) =
+    let projectName = project.ProjectName
+    let path: string = GetProjectPath project
+    NugetRestoreString path
+
+let JustBuild binaryConfig: Option<Frontend*FileInfo> =
     printfn "Building in %s mode..." (binaryConfig.ToString().ToUpper())
     let buildTool = Map.tryFind "BuildTool" buildConfigContents
     if buildTool.IsNone then
         failwith "A BuildTool should have been chosen by the configure script, please report this bug"
 
+    let nugetDir = DirectoryInfo ".nuget"
+    if not nugetDir.Exists then
+        nugetDir.Create()
+
+    let nugetVersionToDownload =
+        if oldVersionOfMono then
+            "4.5.1"
+        else
+            "5.4.0"
+    let nugetUrl = sprintf "https://dist.nuget.org/win-x86-commandline/v%s/nuget.exe"
+                           nugetVersionToDownload
+    if not nugetExe.Exists then
+        Process.SafeExecute({ Command = "curl"; Arguments = sprintf "-o .nuget/nuget.exe %s" nugetUrl },
+                            Echo.All) |> ignore
+        nugetExe.Refresh()
+
+    List.map NugetRestore [BackendProject.Backend; BackendProject.BackendTests] |> ignore
+
     BuildSolution buildTool.Value DEFAULT_SOLUTION_FILE binaryConfig String.Empty
+
+    let restoreAndBuildSol sol =
+        BuildSolution buildTool.Value sol binaryConfig "/t:Restore"
+        // TODO: report as a bug the fact that /t:Restore;Build doesn't work while /t:Restore and later /t:Build does
+        BuildSolution buildTool.Value sol binaryConfig "/t:Build"
+
 
     let frontend =
         // older mono versions (which only have xbuild, not msbuild) can't compile .NET Standard assemblies
-        if buildTool.Value = "msbuild" && Misc.GuessPlatform () = Misc.Platform.Linux then
-
-            let pkgConfigForGtkProc = Process.Execute({ Command = "pkg-config"; Arguments = "gtk-sharp-2.0" }, Echo.All)
-            let isGtkPresent =
-                (0 = pkgConfigForGtkProc.ExitCode)
-
-            if isGtkPresent then
-
-                // somehow, msbuild doesn't restore the dependencies of the GTK frontend (Xamarin.Forms in particular)
-                // when targetting the LINUX_SOLUTION_FILE below, so we need this workaround. TODO: report this bug
-                let nugetWorkaroundArgs =
-                    sprintf "%s restore src/%s/%s.fsproj -SolutionDirectory ."
-                            nugetExe.FullName GTK_FRONTEND GTK_FRONTEND
-                Process.Execute({ Command = "mono"; Arguments = nugetWorkaroundArgs }, Echo.All) |> ignore
-
-                BuildSolution "msbuild" LINUX_SOLUTION_FILE binaryConfig "/t:Restore"
-                // TODO: report as a bug the fact that /t:Restore;Build doesn't work while /t:Restore and later /t:Build does
-                BuildSolution "msbuild" LINUX_SOLUTION_FILE binaryConfig "/t:Build"
-                Frontend.Gtk
-            else
-                Frontend.Console
+        if oldVersionOfMono then
+            None
         else
-            Frontend.Console
+            NugetRestoreString NETSTANDARD_SOLUTION_FILE
+            BuildSolution buildTool.Value NETSTANDARD_SOLUTION_FILE binaryConfig "/t:Build"
 
-    let scriptName = sprintf "%s-%s" UNIX_NAME (frontend.ToString().ToLower())
-    let launcherScriptFile = Path.Combine (scriptsDir.FullName, "bin", scriptName) |> FileInfo
-    Directory.CreateDirectory(launcherScriptFile.Directory.FullName) |> ignore
-    let wrapperScriptWithPaths =
-        wrapperScript.Replace("$UNIX_NAME", UNIX_NAME)
-                     .Replace("$GWALLET_PROJECT", frontend.GetExecutableName())
-    File.WriteAllText (launcherScriptFile.FullName, wrapperScriptWithPaths)
-    frontend,launcherScriptFile
+            if Misc.GuessPlatform () <> Misc.Platform.Linux then
+                Some Frontend.Console
+            else
+                let pkgConfigForGtkProc = Process.Execute({ Command = "pkg-config"; Arguments = "gtk-sharp-2.0" }, Echo.All)
+                let isGtkPresent =
+                    (0 = pkgConfigForGtkProc.ExitCode)
+
+                if isGtkPresent then
+                    Some Frontend.Gtk
+                else
+                    Some Frontend.Console
+
+    match frontend with
+    | None -> None
+    | Some frontend ->
+        if frontend = Frontend.Gtk then
+            // somehow, msbuild doesn't restore the dependencies of the GTK frontend (Xamarin.Forms in particular)
+            // when targetting the LINUX_SOLUTION_FILE below, so we need this workaround. TODO: report this bug
+            NugetRestore Frontend.Gtk
+
+            restoreAndBuildSol LINUX_SOLUTION_FILE
+
+        let scriptName = sprintf "%s-%s" UNIX_NAME (frontend.ToString().ToLower())
+        let launcherScriptFile = FileInfo (Path.Combine (__SOURCE_DIRECTORY__, "bin", scriptName))
+        Directory.CreateDirectory(launcherScriptFile.Directory.FullName) |> ignore
+        let wrapperScriptWithPaths =
+            wrapperScript.Replace("$TARGET_DIR", UNIX_NAME)
+                         .Replace("$GWALLET_PROJECT", GetProjectName frontend)
+        File.WriteAllText (launcherScriptFile.FullName, wrapperScriptWithPaths)
+        Some(frontend, launcherScriptFile)
 
 let MakeCheckCommand (commandName: string) =
     if not (Process.CommandWorksInShell commandName) then
@@ -185,31 +260,20 @@ let MakeCheckCommand (commandName: string) =
         Environment.Exit 1
 
 let GetPathToFrontend (frontend: Frontend) (binaryConfig: BinaryConfig): DirectoryInfo*FileInfo =
-    let frontendProjName = frontend.GetProjectName()
+    let frontendProjName = GetProjectName frontend
     let dir = Path.Combine (rootDir.FullName, "src", frontendProjName, "bin", binaryConfig.ToString())
                   |> DirectoryInfo
     let mainExecFile = dir.GetFiles("*.exe", SearchOption.TopDirectoryOnly).Single()
     dir,mainExecFile
 
-let GetPathToBackend () =
-    Path.Combine (rootDir.FullName, "src", BACKEND)
-
 let MakeAll() =
     let buildConfig = BinaryConfig.Debug
-    let frontend,_ = JustBuild buildConfig
-    frontend,buildConfig
+    match JustBuild buildConfig with
+    | None -> None
+    | Some (frontend, _) ->
+        Some (frontend, buildConfig)
 
 let RunFrontend (frontend: Frontend) (buildConfig: BinaryConfig) (maybeArgs: Option<string>) =
-    let monoVersion = Map.tryFind "MonoPkgConfigVersion" buildConfigContents
-    let oldVersionOfMono =
-        match monoVersion with
-        | None ->
-            false
-        | Some version ->
-            let versionOfMonoWhereRunningExesDirectlyIsSupported = Version("5.16")
-            let currentMonoVersion = Version(version)
-            1 = versionOfMonoWhereRunningExesDirectlyIsSupported.CompareTo currentMonoVersion
-
     let frontendDir,frontendExecutable = GetPathToFrontend frontend buildConfig
     let pathToFrontend = frontendExecutable.FullName
 
@@ -253,7 +317,11 @@ match maybeTarget with
     let version = Misc.GetCurrentVersion(rootDir).ToString()
 
     let release = BinaryConfig.Release
-    let frontend,script = JustBuild release
+    let frontend,script =
+        match JustBuild release with
+        | None -> failwith "This system can't build a frontend, so can't zip a release"
+        | Some (x, y) -> x, y
+
     let binDir = "bin"
     Directory.CreateDirectory(binDir) |> ignore
 
@@ -333,11 +401,14 @@ match maybeTarget with
 
 | Some("install") ->
     let buildConfig = BinaryConfig.Release
-    let frontend,launcherScriptFile = JustBuild buildConfig
+    let frontend,launcherScriptFile =
+        match JustBuild buildConfig with
+        | None -> failwith "This system can't build a frontend, so can't install"
+        | Some (x, y) -> x, y
 
     let mainBinariesDir binaryConfig = DirectoryInfo (Path.Combine(rootDir.FullName,
                                                                    "src",
-                                                                   frontend.GetProjectName(),
+                                                                   GetProjectName frontend,
                                                                    "bin",
                                                                    binaryConfig.ToString()))
 
@@ -368,13 +439,19 @@ match maybeTarget with
         failwith "Unexpected chmod failure, please report this bug"
 
 | Some("run") ->
-    let frontend,buildConfig = MakeAll()
+    let frontend, buildConfig =
+        match MakeAll () with
+        | None -> failwith "This system can't build a frontend, so can't run the 'run' target"
+        | Some (x, y) -> x, y
     RunFrontend frontend buildConfig None
         |> ignore
 
 | Some "update-servers" ->
-    let _,buildConfig = MakeAll()
-    Directory.SetCurrentDirectory (GetPathToBackend())
+    let buildConfig =
+        match MakeAll () with
+        | None -> failwith "This system can't build a frontend, so can't run 'update-servers' target"
+        | Some (_, x) -> x
+    Directory.SetCurrentDirectory (GetProjectPath BackendProject.Backend)
     let proc1 = RunFrontend Frontend.Console buildConfig (Some "--update-servers-file")
     if proc1.ExitCode <> 0 then
         Environment.Exit proc1.ExitCode

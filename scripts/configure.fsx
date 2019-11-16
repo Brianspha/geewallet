@@ -90,7 +90,7 @@ let buildTool =
         ConfigCommandCheck ["make"] |> ignore
         ConfigCommandCheck ["fsharpc"] |> ignore
 
-        // needed by NuGet.Restore.targets & the "update-servers" Makefile target
+        // needed by the "update-servers" Makefile target
         ConfigCommandCheck ["curl"]
             |> ignore
 

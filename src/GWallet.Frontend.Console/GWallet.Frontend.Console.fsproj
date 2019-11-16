@@ -78,14 +78,74 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="BouncyCastle.Crypto">
-      <HintPath>..\..\packages\BouncyCastle.1.8.2\lib\BouncyCastle.Crypto.dll</HintPath>
+      <HintPath>..\..\packages\Portable.BouncyCastle.1.8.5.2\lib\net40\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <ProjectReference Include="..\GWallet.Backend\GWallet.Backend.fsproj">
-      <Name>GWallet.Backend</Name>
-      <Project>{96f9b3e5-11f8-4f5f-aadc-51d0d995b3d2}</Project>
+    <Reference Include="NBitcoin">
+      <HintPath>..\..\packages\NBitcoin.5.0.13\lib\net461\NBitcoin.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Essentials">
+      <HintPath>..\..\packages\DotNetEssentials.1.3.1-date20200206-0515.git-cdb9624\lib\net461\Xamarin.Essentials.dll</HintPath>
+    </Reference>
+    <Reference Include="Nethereum.Signer">
+      <HintPath>..\..\packages\Nethereum.0.10.0-date20200125-1201.git-5da787e\lib\netstandard2.0\Nethereum.Signer.dll</HintPath>
+    </Reference>
+    <Reference Include="NBitcoin.Altcoins">
+      <HintPath>..\..\packages\NBitcoin.Altcoins.2.0.5.1\lib\netstandard2.0\NBitcoin.Altcoins.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>..\..\packages\System.Buffers.4.5.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="Nethereum.KeyStore">
+      <HintPath>..\..\packages\Nethereum.0.10.0-date20200125-1201.git-5da787e\lib\netstandard2.0\Nethereum.KeyStore.dll</HintPath>
+    </Reference>
+    <Reference Include="Nethereum.Web3">
+      <HintPath>..\..\packages\Nethereum.0.10.0-date20200125-1201.git-5da787e\lib\netstandard2.0\Nethereum.Web3.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonRpcSharp.Client">
+      <HintPath>..\..\packages\JsonRpcSharp.0.90.0-date20200125-1141.git-db16aef\lib\netstandard2.0\JsonRpcSharp.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpRaven">
+      <HintPath>..\..\packages\SharpRaven.2.4.0\lib\netstandard2.0\SharpRaven.dll</HintPath>
+    </Reference>
+    <Reference Include="Common.Logging.Core">
+      <HintPath>..\..\packages\Common.Logging.Core.3.4.1\lib\netstandard1.0\Common.Logging.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonRpcSharp.RpcClient">
+      <HintPath>..\..\packages\JsonRpcSharp.0.90.0-date20200125-1141.git-db16aef\lib\netstandard2.0\JsonRpcSharp.RpcClient.dll</HintPath>
+    </Reference>
+    <Reference Include="JsonRpcSharp.TcpClient">
+      <HintPath>..\..\packages\JsonRpcSharp.0.90.0-date20200125-1141.git-db16aef\lib\netstandard2.0\JsonRpcSharp.TcpClient.dll</HintPath>
+    </Reference>
+    <Reference Include="Nethereum.StandardTokenEIP20">
+      <HintPath>..\..\packages\Nethereum.0.10.0-date20200125-1201.git-5da787e\lib\netstandard2.0\Nethereum.StandardTokenEIP20.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Pipelines">
+      <HintPath>..\..\packages\System.IO.Pipelines.4.5.3\lib\netstandard2.0\System.IO.Pipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>..\..\packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions">
+      <HintPath>..\..\packages\System.Threading.Tasks.Extensions.4.5.1\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>..\..\packages\System.Runtime.CompilerServices.Unsafe.4.5.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="FSharp.Data">
+      <HintPath>..\..\packages\FSharp.Data.3.0.0\lib\netstandard2.0\FSharp.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>..\..\packages\HtmlAgilityPack.1.11.9\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetLightning.Core">
+      <HintPath>..\..\packages\DotNetLightning.1.1.0-date20200221-0809.git-8f38cf5\lib\netstandard2.0\DotNetLightning.Core.dll</HintPath>
+    </Reference>
+    <ProjectReference Include="..\GWallet.Backend.NetStandard\GWallet.Backend.NetStandard.fsproj">
+      <Name>GWallet.Backend.NetStandard</Name>
+      <Project>{949A9225-A1BE-4EDA-A1DA-04AC131CFE9B}</Project>
       <Private>True</Private>
     </ProjectReference>
     <Reference Include="FSharp.Core">

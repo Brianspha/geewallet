@@ -17,7 +17,8 @@ stockmono_build:
     - DEBIAN_FRONTEND=noninteractive apt-get install -y mono-complete mono-xbuild fsharp
     - mono --version
 
-    - time (./configure.sh && make && make install)
+    # no make install since the exe cannot be built with this version of mono as it uses netstandard
+    - time (./configure.sh && make)
     # so that we log the version of nuget for when it works
     - make nuget
 
@@ -90,8 +91,7 @@ stockmono_test_integration:
     - DEBIAN_FRONTEND=noninteractive apt-get install -y mono-complete mono-xbuild fsharp
 
     - ./configure.sh &&
-      make &&
-      make update-servers
+      make
 
 newmono_test_integration:
   image: ubuntu:18.04

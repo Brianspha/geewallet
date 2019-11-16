@@ -451,7 +451,7 @@ module Account =
         if not (addressOrUrl.StartsWith "bitcoin:") then
             addressOrUrl,None
         else
-            let uriBuilder = BitcoinUrlBuilder addressOrUrl
+            let uriBuilder = BitcoinUrlBuilder (addressOrUrl, Config.BitcoinNet)
             if null <> uriBuilder.UnknowParameters && uriBuilder.UnknowParameters.Any() then
                 failwithf "Unknown parameters found in URI %s: %s"
                           addressOrUrl (String.Join(",", uriBuilder.UnknowParameters.Keys))
