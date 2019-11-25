@@ -244,19 +244,17 @@ type DonutChartView () =
                 let canvasSize = svgHolder.CanvasSize
                 let cullRect = svgHolder.Picture.CullRect
 
-                let imageInfo = SKImageInfo(int canvasSize.Width, int canvasSize.Height)
-                use surface = SKSurface.Create imageInfo
-
+                use bitmap = new SKBitmap(int canvasSize.Width, int canvasSize.Height)
+                use canvas = new SKCanvas(bitmap)
                 let canvasMin = Math.Min(canvasSize.Width, canvasSize.Height)
                 let svgMax = Math.Max(cullRect.Width, cullRect.Height)
                 let scale = canvasMin / svgMax
                 let matrix = SKMatrix.MakeScale(scale, scale)
-                surface.Canvas.Clear SKColor.Empty
-                surface.Canvas.DrawPicture(svgHolder.Picture, ref matrix)
-                surface.Canvas.Flush()
-                surface.Canvas.Save() |> ignore
-
-                use image = surface.Snapshot()
+                canvas.Clear SKColor.Empty
+                canvas.DrawPicture(svgHolder.Picture, ref matrix)
+                canvas.Flush()
+                canvas.Save() |> ignore
+                use image = SKImage.FromBitmap bitmap
                 let data = image.Encode(SKEncodedImageFormat.Png, Int32.MaxValue)       
                 self.Source <- ImageSource.FromStream(fun _ -> data.AsStream())
 
