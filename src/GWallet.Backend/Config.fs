@@ -73,9 +73,6 @@ module Config =
 
     // TODO: make the tests instantiate Legacy or nonLegacyTcpClient themselves and test both from them
     let NewUtxoTcpClientDisabled =
-        //in macOS, even if using Mono >5.18.0.240 (e.g. 6.6.0.155 at the time of writing), we still get hangs
-        IsMacPlatform() ||
-
         //we need this check because older versions of Mono (such as 5.16, or Ubuntu 18.04 LTS's version: 4.6.2)
         //don't work with the new TCP client, only the legacy one works
         (Option.exists (fun monoVersion -> monoVersion < Version("5.18.0.240")) (GetMonoVersion()))

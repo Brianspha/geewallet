@@ -85,7 +85,7 @@ module ServerManager =
 
     let private testingSettings =
         {
-            NumberOfParallelJobsAllowed = 4u
+            NumberOfParallelJobsAllowed = 1u
 
             // if not zero we might screw up our percentage logging when performing the requests?
             NumberOfRetries = 0u
@@ -155,19 +155,21 @@ module ServerManager =
             File.WriteAllText(ServerRegistry.ServersEmbeddedResourceFileName, serversInJson)
 
     let UpdateServersStats () =
-        let jobs = seq {
-            for currency in Currency.GetAll() do
-
-                // because ETH tokens use ETH servers
-                if not (currency.IsEthToken()) then
+        let jobs currency = seq {
                     let serversForSpecificCurrency = Caching.Instance.GetServers currency
                     match GetDummyBalanceAction currency serversForSpecificCurrency with
                     | None -> ()
                     | Some job -> yield job
         }
-        Async.Parallel jobs
+        Console.WriteLine("BTC first")
+        Async.Parallel (jobs Currency.BTC)
             |> Async.RunSynchronously
             |> ignore
+        Console.WriteLine("LTC now")
+        Async.Parallel (jobs Currency.LTC)
+            |> Async.RunSynchronously
+            |> ignore
+        Console.WriteLine("=============FINISHED")
 
         UpdateBaseline()
 

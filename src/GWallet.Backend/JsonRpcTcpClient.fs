@@ -14,7 +14,7 @@ type ServerCannotBeResolvedException =
     new(message:string, innerException: Exception) = { inherit CommunicationUnsuccessfulException(message, innerException) }
 
 type NonAbstractTcpClient(resolveHostJob, port, timeout) =
-    inherit JsonRpcSharp.TcpClient.JsonRpcClient(resolveHostJob, port, timeout)
+    inherit JsonRpcClientNew(resolveHostJob, port, timeout)
 
 type JsonRpcTcpClient (host: string, port: uint32) =
 
@@ -72,7 +72,7 @@ type JsonRpcTcpClient (host: string, port: uint32) =
         with
         | :? CommunicationUnsuccessfulException as ex ->
             return raise <| FSharpUtil.ReRaise ex
-        | :? JsonRpcSharp.TcpClient.CommunicationUnsuccessfulException as ex ->
+        | :? ElectrumCommunicationUnsuccessfulException as ex ->
             return raise <| CommunicationUnsuccessfulException(ex.Message, ex)
 
         | :? JsonRpcSharpOld.NoResponseReceivedAfterRequestException as ex ->

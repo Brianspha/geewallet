@@ -68,6 +68,7 @@ module Server =
                                               : Async<'R> = async {
             try
                 let stratumClient = ElectrumClient.StratumServer server
+                Console.WriteLine(sprintf "Testing %s" server.ServerInfo.NetworkPath    )
                 return! electrumClientFunc stratumClient
 
             // NOTE: try to make this 'with' block be in sync with the one in EtherServer:GetWeb3Funcs()
