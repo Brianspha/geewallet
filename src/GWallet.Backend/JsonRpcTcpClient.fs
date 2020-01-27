@@ -32,7 +32,10 @@ type JsonRpcTcpClient (host: string, port: uint32) =
             match maybeTimedOutipAddress with
             | Some ipAddressOption ->
                 match ipAddressOption with
-                | Some ipAddress -> return ipAddress
+                | Some ipAddress ->
+                    Console.WriteLine("host " + host + " resolved to '"+ipAddress.ToString()+"'")
+                    Console.Out.Flush()
+                    return ipAddress
                 | None   -> return raise <| ServerCannotBeResolvedException
                                                 (sprintf "DNS host entry lookup resulted in no records for %s" host)
             | None -> return raise <| TimeoutException (sprintf "Timed out connecting to %s:%i" host port)
