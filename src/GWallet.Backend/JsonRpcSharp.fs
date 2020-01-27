@@ -43,22 +43,21 @@ type JsonRpcClientNew(resolveHostAsync: unit->Async<IPAddress>, port, timeout: T
             logit("________gonna test timeout")
             let mutable total = int timeout.TotalMilliseconds
             while total > 0 do
-                logit "________wait"
+                logit ("________wait(left="+total.ToString()+")")
                 do! Async.Sleep 5000
-                logit("________waited,5 less")
+                logit("________waited,5sec less")
                 total <- total - 5000
             logit(">>>>>TIMEOUT! should jump now")
-            Console.Out.Flush()
             return Some Timeout
         }
 
         let! result = Async.Choice([read; delay])
         match result with
         | Some x ->
-            logit "no timeout"
+            logit "[no timeout]"
             return x
         | None ->
-            logit "a timeout"
+            logit "[a timeout]"
             return Timeout
     }
 
@@ -146,7 +145,9 @@ type JsonRpcClientNew(resolveHostAsync: unit->Async<IPAddress>, port, timeout: T
     default __.RequestAsync (json: string) =
         async {
             try
-                return! RequestImplAsync json
+                let! res = RequestImplAsync json
+                Console.WriteLine "=======request finished successfully"
+                return res
             with
             | :? AggregateException as ae when ae.Flatten().InnerExceptions
                     |> Seq.exists (fun x -> x :? SocketException ||
