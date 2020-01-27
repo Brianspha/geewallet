@@ -123,7 +123,7 @@ type JsonRpcClientNew(resolveHostAsync: unit->Async<IPAddress>, port, timeout: T
     let RequestImplAsync (json: string) =
         async {
             let! endpoint = resolveHostAsync() |> withTimeout timeout |> unwrapTimeout "Name resolution timed out"
-            logit("_____ resolved")
+            logit("_____ resolved:" + endpoint.ToString()+"{END}")
             use socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
             let! _ = socket.ConnectAsync(endpoint, port)
                            |> Async.AwaitTask |> withTimeout timeout |> unwrapTimeout "Socket connect timed out"
