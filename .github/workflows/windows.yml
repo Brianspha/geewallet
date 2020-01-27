@@ -31,35 +31,6 @@ jobs:
         make.bat update-servers
         make.bat update-servers
         make.bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
-        make,bat update-servers
+        make.bat update-servers
+        make.bat update-servers
+
