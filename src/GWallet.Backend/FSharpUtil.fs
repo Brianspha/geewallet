@@ -57,25 +57,20 @@ module FSharpUtil =
 
         // like Async.Choice, but with no need for Option<T> types
         let WhenAny<'T>(jobs: seq<Async<'T>>): Async<'T> =
-            let wrap job =
+            let wrap (job: Async<'T>): Async<Option<'T>> =
                 async {
                     let! res = job
-                    return! RaiseResult <| ResultWrapper res
+                    return Some res
                 }
 
             async {
-                try
-                    do!
-                        jobs
-                        |> Seq.map wrap
-                        |> Async.Parallel
-                        |> Async.Ignore
-
-                    // unreachable
-                    return failwith "No successful result?"
-                with
-                | :? ResultWrapper<'T> as ex ->
-                    return ex.Value
+                let wrappedJobs = jobs |> Seq.map wrap
+                let! combinedRes = Async.Choice wrappedJobs
+                match combinedRes with
+                | Some x ->
+                    return x
+                | None ->
+                    return failwith "unreachable"
             }
 
         // a mix between Async.WhenAny and Async.Choice
