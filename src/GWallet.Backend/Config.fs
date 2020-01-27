@@ -79,7 +79,7 @@ module Config =
 
     // FIXME: make FaultTolerantParallelClient accept funcs that receive this as an arg, maybe 2x-ing it when a full
     //        round of failures has happened, as in, all servers failed
-    let internal DEFAULT_NETWORK_TIMEOUT = TimeSpan.FromSeconds 30.0
+    let internal DEFAULT_NETWORK_TIMEOUT = TimeSpan.FromSeconds 10.0
 
     let internal NUMBER_OF_RETRIES_TO_SAME_SERVERS = 3u
 

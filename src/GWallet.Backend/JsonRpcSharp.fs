@@ -32,7 +32,7 @@ type JsonRpcClientNew(resolveHostAsync: unit->Async<IPAddress>, port, timeout: T
         Console.Out.Flush()
     let withTimeout (_: TimeSpan) (job: Async<_>) = async {
         //26F 25S
-        let timeout = TimeSpan.FromSeconds 50.0
+        let timeout = TimeSpan.FromSeconds 30.0
         let read = async {
             let! value = job
             return value |> Result |> Some
