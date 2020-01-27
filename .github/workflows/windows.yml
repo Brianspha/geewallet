@@ -26,11 +26,5 @@ jobs:
     - name: Run a one-line script
       shell: cmd
       run: |
-        configure.bat && make.bat
-        make.bat update-servers
-        make.bat update-servers
-        make.bat update-servers
-        make.bat update-servers
-        make.bat update-servers
-        make.bat update-servers
+        configure.bat && make.bat && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers && make.bat update-servers
 
