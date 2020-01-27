@@ -7,6 +7,10 @@ open Microsoft.FSharp.Reflection
 
 module FSharpUtil =
 
+    type TimeoutOrResult<'T> =
+        | Timeout
+        | Result of 'T
+
     type internal ResultWrapper<'T>(value : 'T) =
 
         // hack?
@@ -108,13 +112,39 @@ module FSharpUtil =
     let ListIntersect<'T> (list1: List<'T>) (list2: List<'T>) (offset: uint32): List<'T> =
         ListIntersectInternal list1 list2 offset [] 1
 
-    let WithTimeout (timeSpan: TimeSpan) (operation: Async<'R>): Async<Option<'R>> = async {
+    let withTimeout (timeSpan: TimeSpan) (operation: Async<'R>): Async<Option<'R>> = async {
         let! child = Async.StartChild (operation, int timeSpan.TotalMilliseconds)
         try
             let! result = child
             return Some result
         with :? TimeoutException ->
             return None
+    }
+
+    let WithTimeout (timeSpan: TimeSpan) (job: Async<'T>): Async<Option<'T>> = async {
+
+        let read = async {
+            let! value = job
+            return value |> Result |> Some
+        }
+
+        let delay = async {
+            let total = int timeSpan.TotalMilliseconds
+            do! Async.Sleep total
+            return Some Timeout
+        }
+
+        let! result = Async.Choice([read; delay])
+        match result with
+        | Some x ->
+            match x with
+            | Result r ->
+                return Some r
+            | Timeout ->
+                return None
+        | None ->
+            // none of the jobs passed to Async.Choice returns None
+            return failwith "unreachable"
     }
 
     // FIXME: we should not need this workaround anymore when this gets addressed:
