@@ -5,6 +5,8 @@ open System.Net
 
 open FSharp.Data
 
+open GWallet.Backend.FSharpUtil.UwpHacks
+
 module FiatValueEstimation =
     let private PERIOD_TO_CONSIDER_PRICE_STILL_FRESH = TimeSpan.FromMinutes 2.0
 
@@ -42,7 +44,7 @@ module FiatValueEstimation =
             | Currency.SAI -> "dai"
 
         try
-            webClient.DownloadString(sprintf "https://api.coinmarketcap.com/v1/ticker/%s/" tickerName)
+            webClient.DownloadString(SPrintF1 "https://api.coinmarketcap.com/v1/ticker/%s/" tickerName)
                 |> Some
         with
         | :? WebException -> None

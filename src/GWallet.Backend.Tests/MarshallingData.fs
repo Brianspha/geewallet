@@ -7,6 +7,7 @@ open System.Reflection
 open GWallet.Backend
 open GWallet.Backend.UtxoCoin
 open GWallet.Backend.Ether
+open GWallet.Backend.FSharpUtil.UwpHacks
 
 module MarshallingData =
 
@@ -27,7 +28,7 @@ module MarshallingData =
         let assembly = Assembly.GetExecutingAssembly()
         use stream = assembly.GetManifestResourceStream resourceName
         if (stream = null) then
-            failwithf "Embedded resource %s not found" resourceName
+            failwith <| SPrintF1 "Embedded resource %s not found" resourceName
         use reader = new StreamReader(stream)
         reader.ReadToEnd()
             |> Sanitize

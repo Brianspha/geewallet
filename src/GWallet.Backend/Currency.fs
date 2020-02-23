@@ -3,20 +3,39 @@
 open System.Linq
 open System.ComponentModel
 
+open GWallet.Backend.FSharpUtil.UwpHacks
+
 // this attribute below is for Json.NET (Newtonsoft.Json) to be able to deserialize this as a dict key
 [<TypeConverter(typeof<StringTypeConverter>)>]
 type Currency =
+    // <NOTE if adding a new cryptocurrency below, remember to add it too to GetAll() and ToString()
     | BTC
     | LTC
     | ETH
     | ETC
     | SAI
     | DAI
+    // </NOTE>
+
+#if REFLECTION
     static member ToStrings() =
         Microsoft.FSharp.Reflection.FSharpType.GetUnionCases(typeof<Currency>)
             |> Array.map (fun info -> info.Name)
+#endif
+
     static member GetAll(): seq<Currency> =
+#if REFLECTION
         FSharpUtil.GetAllElementsFromDiscriminatedUnion<Currency>()
+#else
+        seq {
+            yield BTC
+            yield LTC
+            yield ETH
+            yield ETC
+            yield SAI
+            yield DAI
+        }
+#endif
 
     static member Parse(currencyString: string): Currency =
         Currency.GetAll().First(fun currency -> currencyString = currency.ToString())
@@ -38,10 +57,20 @@ type Currency =
         elif self = Currency.SAI then
             18
         else
-            failwithf "Unable to determine decimal places for %A" self
+            failwith <| SPrintF1 "Unable to determine decimal places for %A" self
 
     override self.ToString() =
+#if REFLECTION
         sprintf "%A" self
+#else
+        match self with
+        | BTC -> "BTC"
+        | LTC -> "LTC"
+        | ETH -> "ETH"
+        | ETC -> "ETC"
+        | SAI -> "SAI"
+        | DAI -> "DAI"
+#endif
 
 // the reason we have used "and" is because of the circular reference
 // between StringTypeConverter and Currency
